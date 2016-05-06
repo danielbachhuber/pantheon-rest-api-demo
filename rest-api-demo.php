@@ -19,3 +19,18 @@ function rad_format_phone_number( $input ) {
 	}
 	return '';
 }
+
+add_action( 'rest_api_init', function() {
+
+	register_rest_route( 'rad/v1', 'site-info', array(
+		array(
+			'methods'            => 'GET',
+			'callback'           => function( $request ) {
+				return array(
+					'phone_number' => rad_format_phone_number( get_option( 'phone_number' ) ),
+				);
+			},
+		),
+	) );
+
+} );
