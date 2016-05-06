@@ -18,9 +18,20 @@ class Tests_REST_API_Demo extends WP_UnitTestCase {
 		do_action( 'rest_api_init' );
 
 		update_option( 'phone_number', '(555) 212-2121' );
+
+		$this->subscriber = $this->factory->user->create( array( 'role' => 'subscriber' ) );
+		$this->administrator = $this->factory->user->create( array( 'role' => 'administrator' ) );
 	}
 
-	public function test_get() {
+	public function test_get_unauthorized() {
+		wp_set_current_user( 0 );
+		$request = new WP_REST_Request( 'GET', '/rad/v1/site-info' );
+		$response = $this->server->dispatch( $request );
+		$this->assertResponseStatus( 401, $response );
+	}
+
+	public function test_get_authorized() {
+		wp_set_current_user( $this->subscriber );
 		$request = new WP_REST_Request( 'GET', '/rad/v1/site-info' );
 		$response = $this->server->dispatch( $request );
 		$this->assertResponseStatus( 200, $response );
@@ -29,7 +40,17 @@ class Tests_REST_API_Demo extends WP_UnitTestCase {
 		), $response );
 	}
 
-	public function test_update() {
+	public function test_update_unauthorized() {
+		wp_set_current_user( $this->subscriber );
+		$request = new WP_REST_Request( 'POST', '/rad/v1/site-info' );
+		$request->set_param( 'phone_number', '(111) 222-3333' );
+		$response = $this->server->dispatch( $request );
+		$this->assertResponseStatus( 403, $response );
+		$this->assertEquals( '(555) 212-2121', get_option( 'phone_number' ) );
+	}
+
+	public function test_update_authorized() {
+		wp_set_current_user( $this->administrator );
 		$request = new WP_REST_Request( 'POST', '/rad/v1/site-info' );
 		$request->set_param( 'phone_number', '(111) 222-3333' );
 		$response = $this->server->dispatch( $request );
