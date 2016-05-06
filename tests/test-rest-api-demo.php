@@ -29,6 +29,17 @@ class Tests_REST_API_Demo extends WP_UnitTestCase {
 		), $response );
 	}
 
+	public function test_update() {
+		$request = new WP_REST_Request( 'POST', '/rad/v1/site-info' );
+		$request->set_param( 'phone_number', '(111) 222-3333' );
+		$response = $this->server->dispatch( $request );
+		$this->assertResponseStatus( 200, $response );
+		$this->assertResponseData( array(
+			'phone_number' => '(111) 222-3333',
+		), $response );
+		$this->assertEquals( '(111) 222-3333', get_option( 'phone_number' ) );
+	}
+
 	function test_format_phone_number() {
 		$this->assertEquals( '(555) 212-2121', rad_format_phone_number( '555-212-2121' ) );
 		$this->assertEquals( '(555) 212-2121', rad_format_phone_number( '5552122121' ) );

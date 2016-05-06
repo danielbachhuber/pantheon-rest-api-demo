@@ -27,7 +27,16 @@ add_action( 'rest_api_init', function() {
 			'methods'            => 'GET',
 			'callback'           => function( $request ) {
 				return array(
-					'phone_number' => rad_format_phone_number( get_option( 'phone_number' ) ),
+					'phone_number' => get_option( 'phone_number' ),
+				);
+			},
+		),
+		array(
+			'methods'            => 'POST',
+			'callback'           => function( $request ) {
+				update_option( 'phone_number', $request['phone_number'] );
+				return array(
+					'phone_number' => get_option( 'phone_number' ),
 				);
 			},
 		),
