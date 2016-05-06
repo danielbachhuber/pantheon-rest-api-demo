@@ -27,7 +27,7 @@ add_action( 'rest_api_init', function() {
 			'methods'             => 'GET',
 			'callback'            => function( $request ) {
 				return array(
-					'phone_number' => get_option( 'phone_number' ),
+					'phone_number' => rad_format_phone_number( get_option( 'phone_number' ) ),
 				);
 			},
 			'permission_callback' => function() {
@@ -43,7 +43,7 @@ add_action( 'rest_api_init', function() {
 		array(
 			'methods'            => 'POST',
 			'callback'           => function( $request ) {
-				update_option( 'phone_number', $request['phone_number'] );
+				update_option( 'phone_number', rad_format_phone_number( $request['phone_number'] ) );
 				return array(
 					'phone_number' => get_option( 'phone_number' ),
 				);
@@ -57,6 +57,19 @@ add_action( 'rest_api_init', function() {
 					'You are not authorized to update this resource.',
 					array( 'status' => is_user_logged_in() ? 403 : 401 ) );
 			},
+			'args'               => array(
+				'phone_number'   => array(
+					'validate_callback' => function( $value ) {
+						if ( '' === $value ) {
+							return true;
+						}
+						if ( $value && rad_format_phone_number( $value ) ) {
+							return true;
+						}
+						return false;
+					},
+				),
+			),
 		),
 	) );
 

@@ -40,6 +40,28 @@ class Tests_REST_API_Demo extends WP_UnitTestCase {
 		), $response );
 	}
 
+	public function test_get_authorized_reformatted() {
+		update_option( 'phone_number', '555 555 5555' );
+		wp_set_current_user( $this->subscriber );
+		$request = new WP_REST_Request( 'GET', '/rad/v1/site-info' );
+		$response = $this->server->dispatch( $request );
+		$this->assertResponseStatus( 200, $response );
+		$this->assertResponseData( array(
+			'phone_number' => '(555) 555-5555',
+		), $response );
+	}
+
+	public function test_get_authorized_invalid_format() {
+		update_option( 'phone_number', 'will this work?' );
+		wp_set_current_user( $this->subscriber );
+		$request = new WP_REST_Request( 'GET', '/rad/v1/site-info' );
+		$response = $this->server->dispatch( $request );
+		$this->assertResponseStatus( 200, $response );
+		$this->assertResponseData( array(
+			'phone_number' => '',
+		), $response );
+	}
+
 	public function test_update_unauthorized() {
 		wp_set_current_user( $this->subscriber );
 		$request = new WP_REST_Request( 'POST', '/rad/v1/site-info' );
@@ -59,6 +81,42 @@ class Tests_REST_API_Demo extends WP_UnitTestCase {
 			'phone_number' => '(111) 222-3333',
 		), $response );
 		$this->assertEquals( '(111) 222-3333', get_option( 'phone_number' ) );
+	}
+
+	public function test_update_authorized_reformatted() {
+		wp_set_current_user( $this->administrator );
+		$request = new WP_REST_Request( 'POST', '/rad/v1/site-info' );
+		$request->set_param( 'phone_number', '555 555 5555' );
+		$response = $this->server->dispatch( $request );
+		$this->assertResponseStatus( 200, $response );
+		$this->assertResponseData( array(
+			'phone_number' => '(555) 555-5555',
+		), $response );
+		$this->assertEquals( '(555) 555-5555', get_option( 'phone_number' ) );
+	}
+
+	public function test_update_authorized_empty() {
+		wp_set_current_user( $this->administrator );
+		$request = new WP_REST_Request( 'POST', '/rad/v1/site-info' );
+		$request->set_param( 'phone_number', '' );
+		$response = $this->server->dispatch( $request );
+		$this->assertResponseStatus( 200, $response );
+		$this->assertResponseData( array(
+			'phone_number' => '',
+		), $response );
+		$this->assertEquals( '', get_option( 'phone_number' ) );
+	}
+
+	public function test_update_authorized_invalid_format() {
+		wp_set_current_user( $this->administrator );
+		$request = new WP_REST_Request( 'POST', '/rad/v1/site-info' );
+		$request->set_param( 'phone_number', 'will this work?' );
+		$response = $this->server->dispatch( $request );
+		$this->assertResponseStatus( 400, $response );
+		$this->assertResponseData( array(
+			'message' => 'Invalid parameter(s): phone_number',
+		), $response );
+		$this->assertEquals( '(555) 212-2121', get_option( 'phone_number' ) );
 	}
 
 	function test_format_phone_number() {
